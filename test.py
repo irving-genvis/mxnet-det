@@ -7,20 +7,39 @@ import time
 from gluoncv import model_zoo, data, utils
 from matplotlib import pyplot as plt
 import mxnet as mx
-from mxnet import gpu
 import cv2
+import argparse
 import numpy as np
 
-threshold = 0.8
-# batch_size_list = [1, 1] + list(range(1, 30)) # warmup + testing
-batch_size_list = list(range(5, 30))
-ctx = mx.gpu(0)
-# net = model_zoo.get_model('ssd_512_resnet50_v1_voc', pretrained=True, ctx=gpu(0))
-# net = model_zoo.get_model('ssd_512_mobilenet1.0_coco', pretrained=True, ctx=gpu(0))
-net = model_zoo.get_model('yolo3_darknet53_coco', pretrained=True, ctx=ctx)
+parser = argparse.ArgumentParser()
+parser.add_argument('--batch_size', type=int, default=6)
+args = parser.parse_args()
 
-for batch_size in batch_size_list:
-    cap = cv2.VideoCapture('/mnt/sda/videos/office.mp4')
+threshold = 0.8
+# cls_of_interest = [0, 2, 5, 7]
+cls_of_interest = [5, 6, 14]
+
+ctx = mx.gpu(0)
+# net = model_zoo.get_model('ssd_512_resnet50_v1_voc', pretrained=True, ctx=ctx)
+# net = model_zoo.get_model('ssd_512_mobilenet1.0_coco', pretrained=True, ctx=ctx)
+# net = model_zoo.get_model('yolo3_darknet53_coco', pretrained=True, ctx=ctx)
+net = model_zoo.get_model('yolo3_darknet53_voc', pretrained=True, ctx=ctx)
+
+
+net.hybridize(True)
+batch_size = args.batch_size
+display = True
+
+cap = cv2.VideoCapture('/mnt/sda/videos/IGA1_BREAD_IGA1_20180522162352_20180522165936_306059.mp4')
+fps = cap.get(cv2.CAP_PROP_FPS)
+v_width = cap.get(3)
+v_height = cap.get(4)
+
+batch_list = [6] + list(range(1, 30))
+
+for batch_size in batch_list:
+    cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+
     num_frame = 0
     num_of_batches = 0
     t1 = time.time()
@@ -28,15 +47,12 @@ for batch_size in batch_size_list:
         nd_img_list = []
         np_img_list = []
 
+        nd_img = None
+        np_img = None
+
         for i in range(batch_size):
             ret, np_img = cap.read()
             if ret:
-                # img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-                # img = cv2.resize(img, (512, int(512.0/img.shape[0]*img.shape[1])))
-                # numpy_image_list.append(img)
-                # num_frame += 1
-                # frame = mx.nd.array(np.transpose(img, (2, 0, 1))[np.newaxis, :, :, :])
-                # image_list.append(frame)
                 num_frame += 1
                 np_img = cv2.cvtColor(np_img, cv2.COLOR_BGR2RGB)
                 nd_img = mx.nd.array(np_img)
@@ -44,20 +60,53 @@ for batch_size in batch_size_list:
             else:
                 break
         if len(nd_img_list) > 0:
+            # we need to make the size of each input tensor the same
+            # otherwise mxnet will crash
+            rest_cnt = batch_size - len(nd_img_list)
+            for cnt in range(rest_cnt):
+                nd_img_list.append(nd_img_list[-1])
             nd_img_list, np_img_list = data.transforms.presets.yolo.transform_test(nd_img_list, short=512)
+            # gluon return the content instead of list
+            # here we do a reverse
+            # in the future we can change the source file of gluon
+            if len(nd_img_list) == 1:
+                nd_img_list = [nd_img_list]
+                np_img_list = [np_img_list]
             num_of_batches += 1
             x = mx.ndarray.concat(*nd_img_list, dim=0).as_in_context(ctx)
+            # print(x.shape, num_frame)
             class_IDs, scores, bounding_boxs = net(x)
-            # for frame_no in range(len(np_img_list)):
-            #     ax = utils.viz.plot_bbox(np_img_list[frame_no], bounding_boxs[frame_no], scores[frame_no],
-            #                              class_IDs[frame_no], class_names=net.classes)
-            #     plt.pause(0.01)
-            # plt.show()
+
+            if display:
+
+                class_IDs, scores, bounding_boxs = \
+                    class_IDs.asnumpy(), scores.asnumpy(), bounding_boxs.asnumpy()
+
+                for frame in range(batch_size):
+                    score = scores[frame, :, :].squeeze()
+                    class_id = class_IDs[frame, :, :].squeeze()
+                    bounding_box = bounding_boxs[frame, :, :].squeeze().astype(int)
+
+                    index = score > threshold
+
+                    class_id = class_id[index]
+                    bounding_box = bounding_box[index, :]
+
+                    show_img = cv2.cvtColor(np_img_list[frame], cv2.COLOR_RGB2BGR)
+
+                    for obj_no in range(bounding_box.shape[0]):
+                        if class_id[obj_no] not in cls_of_interest:
+                            continue
+                        x1, y1, x2, y2 = bounding_box[obj_no, :]
+                        cv2.rectangle(show_img, (x1, y1), (x2, y2), (255, 0, 0))
+
+                    cv2.imshow('Test', show_img)
+                    cv2.waitKey(1)
         else:
             break
 
-
+        # del nd_img_list, nd_img, np_img_list, np_img, class_IDs, scores, bounding_boxs, x
 
     t2 = time.time()
-    print(f'Processed {num_of_batches} batches of {num_frame} images in {t2-t1}s with batch size of {batch_size}.')
-    cap.release()
+    print(f'video length: {num_frame/fps}s, size: {v_width}*{v_height}, fps: {fps}, processed in {t2-t1}s with batch size of {batch_size}.')
+    # cap.release()

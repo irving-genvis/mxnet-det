@@ -1,0 +1,38 @@
+## iga, 3 mins (del all tensors, in terminal)
+Processed 3672 batches of 3672 images in 115.56594133377075s with batch size of 1.
+Processed 3672 batches of 3672 images in 114.16684627532959s with batch size of 1.
+Processed 1836 batches of 3672 images in 86.53147983551025s with batch size of 2.
+Processed 1224 batches of 3672 images in 80.8756844997406s with batch size of 3.
+Processed 918 batches of 3672 images in 77.84649872779846s with batch size of 4.
+Processed 735 batches of 3672 images in 71.12758159637451s with batch size of 5.
+Processed 612 batches of 3672 images in 69.63061690330505s with batch size of 6.
+Processed 525 batches of 3672 images in 76.05926489830017s with batch size of 7.
+Processed 459 batches of 3672 images in 75.41851043701172s with batch size of 8.
+Processed 408 batches of 3672 images in 75.35710620880127s with batch size of 9.
+Processed 368 batches of 3672 images in 77.58607792854309s with batch size of 10.
+
+## vehicle small
+81.2s video of 640.0*480.0 processed in 12.920718669891357s with batch size of 6.
+81.2s video of 640.0*480.0 processed in 19.56498408317566s with batch size of 1.
+81.2s video of 640.0*480.0 processed in 15.037758350372314s with batch size of 2.
+81.2s video of 640.0*480.0 processed in 13.397170543670654s with batch size of 3.
+81.2s video of 640.0*480.0 processed in 12.424719333648682s with batch size of 4.
+81.2s video of 640.0*480.0 processed in 12.215662717819214s with batch size of 5.
+81.2s video of 640.0*480.0 processed in 12.235009908676147s with batch size of 6.
+81.2s video of 640.0*480.0 processed in 12.055506467819214s with batch size of 7.
+81.2s video of 640.0*480.0 processed in 13.597255229949951s with batch size of 8.
+81.2s video of 640.0*480.0 processed in 13.583810329437256s with batch size of 9.
+81.2s video of 640.0*480.0 processed in 13.55326247215271s with batch size of 10.
+81.2s video of 640.0*480.0 processed in 13.67541766166687s with batch size of 11.
+81.2s video of 640.0*480.0 processed in 13.682903289794922s with batch size of 12.
+
+long video test:
+video length: 2144.3s, size: 1920.0*1080.0, fps: 20.0, processed in 888.3283693790436s with batch size of 6.
+video length: 2144.3s, size: 1920.0*1080.0, fps: 20.0, processed in 731.6630356311798s with batch size of 1.
+video length: 2144.3s, size: 1920.0*1080.0, fps: 20.0, processed in 1009.620254278183s with batch size of 2.
+video length: 2144.3s, size: 1920.0*1080.0, fps: 20.0, processed in 941.5272052288055s with batch size of 3.
+video length: 2144.3s, size: 1920.0*1080.0, fps: 20.0, processed in 911.1654765605927s with batch size of 4.
+video length: 2144.3s, size: 1920.0*1080.0, fps: 20.0, processed in 805.8715605735779s with batch size of 5.
+video length: 2144.3s, size: 1920.0*1080.0, fps: 20.0, processed in 844.9421541690826s with batch size of 6.
+video length: 2144.3s, size: 1920.0*1080.0, fps: 20.0, processed in 925.0020852088928s with batch size of 7.
+
