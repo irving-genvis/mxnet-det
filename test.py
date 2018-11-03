@@ -16,29 +16,31 @@ parser.add_argument('--batch_size', type=int, default=6)
 args = parser.parse_args()
 
 threshold = 0.8
-# cls_of_interest = [0, 2, 5, 7]
-cls_of_interest = [5, 6, 14]
+cls_of_interest = {'coco': [0, 2, 5, 7], 'voc': [5, 6, 14]}
+
+cls_cate = 'coco'
 
 ctx = mx.gpu(0)
-# net = model_zoo.get_model('ssd_512_resnet50_v1_voc', pretrained=True, ctx=ctx)
-# net = model_zoo.get_model('ssd_512_mobilenet1.0_coco', pretrained=True, ctx=ctx)
-# net = model_zoo.get_model('yolo3_darknet53_coco', pretrained=True, ctx=ctx)
-net = model_zoo.get_model('yolo3_darknet53_voc', pretrained=True, ctx=ctx)
+# net = model_zoo.get_model('ssd_512_resnet50_v1_' + cls_cate, pretrained=True, ctx=ctx)
+# net = model_zoo.get_model('ssd_512_mobilenet1.0_' + cls_cate, pretrained=True, ctx=ctx)
+net = model_zoo.get_model('yolo3_darknet53_' + cls_cate, pretrained=True, ctx=ctx)
+# net = model_zoo.get_model('yolo3_darknet53_' + cls_cate, pretrained=True, ctx=ctx)
 
-
-net.hybridize(True)
+net.hybridize(static_alloc=True, static_shape=True)
 batch_size = args.batch_size
 display = True
 
-cap = cv2.VideoCapture('/mnt/sda/videos/IGA1_BREAD_IGA1_20180522162352_20180522165936_306059.mp4')
+cap = cv2.VideoCapture('/home/irving/021118/Part 1 233 Site 4 B - 1648 to 1718.wmv')
 fps = cap.get(cv2.CAP_PROP_FPS)
 v_width = cap.get(3)
 v_height = cap.get(4)
+print(v_width, v_height)
 
-batch_list = [6] + list(range(1, 30))
+batch_list = [1, 6] + list(range(1, 30))
 
 for batch_size in batch_list:
     cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, fps * (17 + 1*60))
 
     num_frame = 0
     num_of_batches = 0
@@ -95,10 +97,15 @@ for batch_size in batch_list:
                     show_img = cv2.cvtColor(np_img_list[frame], cv2.COLOR_RGB2BGR)
 
                     for obj_no in range(bounding_box.shape[0]):
-                        if class_id[obj_no] not in cls_of_interest:
+                        if class_id[obj_no] not in cls_of_interest[cls_cate]:
                             continue
+                        # if class_id[obj_no] == 0:
+                        #     print(1)
                         x1, y1, x2, y2 = bounding_box[obj_no, :]
                         cv2.rectangle(show_img, (x1, y1), (x2, y2), (255, 0, 0))
+                        cv2.putText(show_img, str(class_id[obj_no]), (x1, y1 + 10), cv2.FONT_HERSHEY_SIMPLEX,
+                                    1, (255, 0, 0))
+
 
                     cv2.imshow('Test', show_img)
                     cv2.waitKey(1)
@@ -108,5 +115,6 @@ for batch_size in batch_list:
         # del nd_img_list, nd_img, np_img_list, np_img, class_IDs, scores, bounding_boxs, x
 
     t2 = time.time()
-    print(f'video length: {num_frame/fps}s, size: {v_width}*{v_height}, fps: {fps}, processed in {t2-t1}s with batch size of {batch_size}.')
+    print(
+        f'video length: {num_frame/fps}s, size: {v_width}*{v_height}, fps: {fps}, processed in {t2-t1}s with batch size of {batch_size}.')
     # cap.release()
